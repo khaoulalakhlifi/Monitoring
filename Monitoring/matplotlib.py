@@ -105,10 +105,7 @@ def generate_plot(data, variable, label, color='blue'):
     plt.close()
     
     return plot_base64
-# ... (suite du code)
-# ... (le reste du code)
 
-# Générer les graphiques et les convertir en base64
 temperature_plot = generate_plot(hourly_data, 'temperature_2m', 'Température (°C)')
 humidity_plot = generate_plot(hourly_data, 'relative_humidity_2m', 'Humidité relative (%)', color='orange')
 
