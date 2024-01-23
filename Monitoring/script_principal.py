@@ -82,4 +82,4 @@ prediction_temperature, prediction_humidity = make_prediction(models, new_data)
 print(f'Temperature Prediction: {prediction_temperature}')
 print(f'Humidity Prediction: {prediction_humidity}')
 
-# ... (le reste du code)
+
