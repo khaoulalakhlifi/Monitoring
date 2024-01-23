@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualisation Météo</title>
+</head>
+<body>
+    <h1>Visualisation Météo</h1>
+    
+    <h2>Graphique de Température</h2>
+    <img src="data:image/png;base64,{{ temperature_plot }}" alt="Graphique de Température">
+    
+    <h2>Graphique d'Humidité Relative</h2>
+    <img src="data:image/png;base64,{{ humidity_plot }}" alt="Graphique d'Humidité Relative">
+
+    <h2>Prédiction de Température</h2>
+    <p>La prédiction pour la prochaine période est : {{ prediction }}</p>
+</body>
+</html>
