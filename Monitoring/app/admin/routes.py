@@ -1,27 +1,39 @@
-# app/admin/routes.py
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_user, logout_user, login_required
+from app.models import User  # Assurez-vous d'avoir un modèle User dans vos modèles
+from app.models import Client
 
-from flask import render_template, Blueprint
+
+
+auth_bp = Blueprint('auth', __name__)
 
 admin_bp = Blueprint('admin', __name__)
 
-@admin_bp.route('/admin/dashboard')
-def admin_dashboard():
-    # Logique pour afficher le tableau de bord de l'admin
-    return render_template('admin/dashboard.html')
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
 
-@admin_bp.route('/admin/users')
-def admin_users():
-    # Logique pour afficher la liste des utilisateurs administrateurs
-    return render_template('admin/users.html')
+        # Remplacez cette logique avec la vérification réelle des informations d'identification
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Login successful', 'success')
+            return redirect(url_for('admin.dashboard'))
+        else:
+            flash('Invalid username or password', 'danger')
 
-@admin_bp.route('/admin/devices')
-def admin_devices():
-    # Logique pour afficher la liste des appareils supervisés
-    return render_template('admin/devices.html')
+    return render_template('auth/login.html')
 
-@admin_bp.route('/admin/settings')
-def admin_settings():
-    # Logique pour afficher les paramètres/administration générale
-    return render_template('admin/settings.html')
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logout successful', 'success')
+    return redirect(url_for('auth.login'))
 
-# Ajoutez d'autres routes pour les fonctionnalités d'administration au besoin
+@admin_bp.route('/client_list')
+def client_list():
+    clients = Client.query.all()  # Récupérez tous les clients (ajustez cela selon votre modèle)
+    return render_template('admin/client_list.html', clients=clients)

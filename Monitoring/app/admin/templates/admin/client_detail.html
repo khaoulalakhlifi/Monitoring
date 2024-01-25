@@ -1,0 +1,23 @@
+<!-- app/admin/templates/admin/client_detail.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails du Client</title>
+    <!-- Ajoutez ici vos liens vers les fichiers CSS ou CDN nécessaires -->
+</head>
+<body>
+    <div class="container">
+        <h2>Détails du Client</h2>
+
+        <!-- Affichez ici les détails du client (nom, type, coordonnées, etc.) -->
+
+        <p>Nom du Client: {{ client.name }}</p>
+        <p>Type de Client: {{ client.type }}</p>
+        <p>Coordonnées: Latitude {{ client.latitude }}, Longitude {{ client.longitude }}</p>
+        <!-- Ajoutez d'autres détails en fonction de votre modèle de données -->
+    </div>
+</body>
+</html>

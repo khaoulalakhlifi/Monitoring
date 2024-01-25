@@ -1,12 +1,18 @@
-# script_principal.py
-from openai import Model
-from prediction_module import train_model, make_prediction
+from flask import Flask, render_template
 import openmeteo_requests
 from openmeteo_sdk.Variable import Variable
 from geopy.geocoders import Nominatim
+from prediction_module import train_model, make_prediction
 import requests_cache
 import pandas as pd
 from retry_requests import retry
+ # Utilisez 'import matplotlib.pyplot as plt' au lieu de 'import matplotlib as plt'
+from io import BytesIO
+import base64
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
 
 # Fonction pour obtenir les coordonnées géographiques à partir du nom de la ville
 def get_coordinates(city):
@@ -81,5 +87,4 @@ prediction_temperature, prediction_humidity = make_prediction(models, new_data)
 
 print(f'Temperature Prediction: {prediction_temperature}')
 print(f'Humidity Prediction: {prediction_humidity}')
-
 

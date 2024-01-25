@@ -1,0 +1,14 @@
+<!-- templates/admin/client_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Liste des Clients{% endblock %}
+
+{% block content %}
+    <h1>Liste des Clients</h1>
+
+    <ul>
+        {% for client in clients %}
+            <li>{{ client.name }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

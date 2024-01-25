@@ -1,8 +1,11 @@
-# config.py
+from flask import Flask
+from flask_mongoengine import MongoEngine
 
-class Config:
-    SECRET_KEY = 'khaoula_badra'
-    MONGODB_SETTINGS = {
-        'db': 'monitor_database', 
-        'host': 'mongodb://localhost/monitor_database'
-    }
+app = Flask(__name__)
+app.config['MONGODB_SETTINGS'] = {
+    'db': 'your_database_name',
+    'host': 'your_mongodb_uri',
+}
+db = MongoEngine(app)
+DEBUG = True
+

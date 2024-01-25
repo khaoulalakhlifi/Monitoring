@@ -1,0 +1,74 @@
+<!-- templates/add_client.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Client</title>
+</head>
+<body>
+    <h1>Add Client</h1>
+    
+    <form method="POST" action="{{ url_for('add_client') }}">
+        <!-- Champ pour le type de client (pc, iot, ville) -->
+        <label for="client_type">Client Type:</label>
+        <select id="client_type" name="client_type" required>
+            <option value="pc">PC</option>
+            <option value="iot">IoT</option>
+            <option value="ville">Ville</option>
+        </select><br>
+
+        <!-- Champs communs à tous les types de clients -->
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <!-- Ajoutez d'autres champs communs ici -->
+
+        <!-- Champs spécifiques au type de client -->
+        <!-- Exemple pour un PC -->
+        <div id="pc_fields" style="display: none;">
+            <label for="ip_address">IP Address:</label>
+            <input type="text" id="ip_address" name="ip_address"><br>
+
+            <label for="mac_address">MAC Address:</label>
+            <input type="text" id="mac_address" name="mac_address"><br>
+        </div>
+
+        <!-- Exemple pour un IoT -->
+        <div id="iot_fields" style="display: none;">
+            <label for="mqtt_topic">MQTT Topic:</label>
+            <input type="text" id="mqtt_topic" name="mqtt_topic"><br>
+
+            <!-- Ajoutez d'autres champs spécifiques à l'IoT ici -->
+        </div>
+
+        <!-- Exemple pour une Ville -->
+        <div id="ville_fields" style="display: none;">
+            <label for="longitude">Longitude:</label>
+            <input type="text" id="longitude" name="longitude"><br>
+
+            <label for="latitude">Latitude:</label>
+            <input type="text" id="latitude" name="latitude"><br>
+
+            <!-- Ajoutez d'autres champs spécifiques à la Ville ici -->
+        </div>
+
+        <!-- Bouton de soumission -->
+        <button type="submit">Add Client</button>
+    </form>
+
+    <!-- Ajoutez ici du code JavaScript pour afficher/masquer les champs spécifiques en fonction du type de client -->
+    <script>
+        document.getElementById('client_type').addEventListener('change', function() {
+            // Masquer tous les champs spécifiques
+            document.getElementById('pc_fields').style.display = 'none';
+            document.getElementById('iot_fields').style.display = 'none';
+            document.getElementById('ville_fields').style.display = 'none';
+
+            // Afficher les champs spécifiques au type sélectionné
+            var clientType = this.value;
+            document.getElementById(clientType + '_fields').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ from flask import Flask, render_template
 import openmeteo_requests
 from openmeteo_sdk.Variable import Variable
 from geopy.geocoders import Nominatim
+from prediction_module import train_model, make_prediction
 import requests_cache
 import pandas as pd
 from retry_requests import retry
@@ -11,6 +12,7 @@ import base64
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
+
 # Fonction pour obtenir les coordonnées géographiques à partir du nom de la ville
 def get_coordinates(city):
     geolocator = Nominatim(user_agent="your_app_name")
@@ -48,7 +50,6 @@ print(f"Elevation {response.Elevation()} m asl")
 print(f"Timezone {response.Timezone()} {response.TimezoneAbbreviation()}")
 print(f"Timezone difference to GMT+0 {response.UtcOffsetSeconds()} s")
 
-# ... (suite du code)
 # Process hourly data. The order of variables needs to be the same as requested.
 hourly = response.Hourly()
 hourly_temperature_2m = hourly.Variables(0).ValuesAsNumpy()
@@ -67,10 +68,10 @@ hourly_data["precipitation_probability"] = hourly_precipitation_probability
 
 hourly_dataframe = pd.DataFrame(data=hourly_data)
 print(hourly_dataframe)
-
 # Process hourly data. The order of variables needs to be the same as requested.
-current_temperature = hourly_temperature_2m[0]
-current_relative_humidity = hourly_relative_humidity_2m[0]
+hourly = response.Hourly()
+current_temperature = hourly.Variables(0).ValuesAsNumpy()[0]
+current_relative_humidity = hourly.Variables(1).ValuesAsNumpy()[0]
 
 # Utilisez les données pour entraîner les modèles
 models = train_model(hourly_dataframe)
@@ -85,6 +86,9 @@ prediction_temperature, prediction_humidity = make_prediction(models, new_data)
 
 print(f'Temperature Prediction: {prediction_temperature}')
 print(f'Humidity Prediction: {prediction_humidity}')
+
+# ... (le reste du code)
+
 # Fonction pour générer un graphique et le convertir en base64
 def generate_plot(data, variable, label, color='blue'):
     plt.figure(figsize=(12, 6))
@@ -94,20 +98,26 @@ def generate_plot(data, variable, label, color='blue'):
     plt.ylabel(label)
     plt.legend()
     
-    # Enregistrer le graphique dans un buffer BytesIO
+    # Enregistrez le graphique dans un buffer BytesIO
     buf = BytesIO()
     plt.savefig(buf, format='png')
     buf.seek(0)
     
-    # Convertir le graphique en base64
+    # Convertissez le graphique en base64
     plot_base64 = base64.b64encode(buf.read()).decode('utf-8')
     
     plt.close()
     
     return plot_base64
 
-temperature_plot = generate_plot(hourly_data, 'temperature_2m', 'Température (°C)')
-humidity_plot = generate_plot(hourly_data, 'relative_humidity_2m', 'Humidité relative (%)', color='orange')
+# Générer les graphiques et les convertir en base64
+temperature_plot = generate_plot(hourly_dataframe, 'temperature_2m', 'Température (°C)')
+humidity_plot = generate_plot(hourly_dataframe, 'relative_humidity_2m', 'Humidité relative (%)', color='orange')
 
-# Rendre le modèle et les prédictions disponibles dans le template
-render_template('index.html', temperature_plot=temperature_plot, humidity_plot=humidity_plot, prediction_temperature=prediction_temperature, prediction_humidity=prediction_humidity)
+# Afficher les graphiques ou les utiliser comme nécessaire
+# Vous pouvez également les rendre disponibles pour une page web si vous le souhaitez
+# Par exemple, vous pouvez les passer à votre modèle Flask pour les afficher dans une application web
+print("Temperature Plot Base64:")
+print(temperature_plot)
+print("\nHumidity Plot Base64:")
+print(humidity_plot)
