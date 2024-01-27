@@ -1,14 +1,61 @@
-<!-- templates/admin/client_list.html -->
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client List</title>
+</head>
+<body>
+    <h1>Client List</h1>
 
-{% block title %}Liste des Clients{% endblock %}
+    <!-- Balise div pour afficher la liste des clients -->
+    <div id="clientListDisplay"></div>
 
-{% block content %}
-    <h1>Liste des Clients</h1>
+    <script>
+        // Récupérer les données stockées localement
+        var storedData = localStorage.getItem('clientData');
 
-    <ul>
-        {% for client in clients %}
-            <li>{{ client.name }}</li>
-        {% endfor %}
-    </ul>
-{% endblock %}
+        // Initialiser la liste des clients
+        var clients = [];
+
+        // Fonction pour afficher la liste des clients
+        function displayClients() {
+            var clientListDisplay = document.getElementById('clientListDisplay');
+            clientListDisplay.innerHTML = '<h2>Client List</h2>';
+
+            // Vérifier si des données sont disponibles
+            if (storedData) {
+                var clientData = JSON.parse(storedData);
+
+                // Ajouter le client actuel aux données stockées
+                clients.push(clientData);
+
+                clients.forEach(function(client) {
+                    clientListDisplay.innerHTML += `
+                        <p>Type de client: ${client.clientType}</p>
+                        <p>Nom: ${client.name}</p>
+                        <p>${getSpecificFieldsText(client)}</p>
+                        <hr>
+                    `;
+                });
+            } else {
+                console.log('Aucune donnée de client disponible.');
+            }
+        }
+
+        // Fonction pour obtenir le texte des champs spécifiques
+        function getSpecificFieldsText(client) {
+            switch (client.clientType) {
+                case 'pc':
+                    return `IP Address: ${client.specificFields.ip_address}, MAC Address: ${client.specificFields.mac_address}`;
+                case 'iot':
+                    return `MQTT Topic: ${client.specificFields.mqtt_topic}`;
+                case 'ville':
+                    return `Longitude: ${client.specificFields.longitude}, Latitude: ${client.specificFields.latitude}`;
+                default:
+                    return 'Champs spécifiques non disponibles.';
+            }
+        }
+    </script>
+</body>
+</html>

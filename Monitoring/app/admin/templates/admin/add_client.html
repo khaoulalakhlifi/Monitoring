@@ -1,16 +1,171 @@
-<!-- templates/add_client.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Add Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #clientListDisplay {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #clientListDisplay h2 {
+            color: #333;
+        }
+
+        #clientListDisplay p {
+            margin: 5px 0;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #ddd;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
     <h1>Add Client</h1>
+    <button onclick="filterClients('pc')">PC Clients</button>
+    <button onclick="filterClients('iot')">IoT Clients</button>
+    <button onclick="filterClients('ville')">Ville Clients</button>
+    <button onclick="fetchSystemInfo()">Static</button>
+    <h1>System Information</h1>
+    <p id="memoryUsage">Memory Usage: </p>
+    <p id="cpuUsage">CPU Usage: </p>
+    <p id="diskUsage">Disk Usage: </p>
+    <canvas id="systemChart" width="400" height="200"></canvas>
+
+
+    <script>
+        async function fetchSystemInfo() {
+            try {
+                const response = await fetch('systemInfo.json');
+                if (!response.ok) {
+                    throw new Error(`Erreur lors de la récupération des données : ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                createChart(data);
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données système:', error);
+            }
+        }
+        
+        
+        
+        async function fetchAndRefreshSystemInfo() {
+            try {
+                const response = await fetch('Get-SystemInfo.ps1');
+                const data = await response.json();
+                createChart(data);
+                setTimeout(fetchAndRefreshSystemInfo, 60000);  // Rafraîchir toutes les 60 secondes
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données système:', error);
+            }
+        }
+        
+        // Appelez cette fonction pour démarrer le processus de rafraîchissement
+        fetchAndRefreshSystemInfo();
+        
+        
+        function createChart(data) {
+            // Mettez à jour le graphique avec les nouvelles données
+            const ctx = document.getElementById('systemChart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Memory Usage', 'CPU Usage', 'Disk Usage'],
+                    datasets: [{
+                        label: 'System Info',
+                        data: [data.MemoryUsagePercent, data.CpuUsagePercent, data.DiskUsagePercent],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        
+            // Affichez les données dans la page HTML
+            document.getElementById('memoryUsage').innerText = `Memory Usage: ${data.MemoryUsagePercent}%`;
+            document.getElementById('cpuUsage').innerText = `CPU Usage: ${data.CpuUsagePercent}%`;
+            document.getElementById('diskUsage').innerText = `Disk Usage: ${data.DiskUsagePercent}%`;
+        }
+        
+           
+    </script>        
     
-    <form method="POST" action="{{ url_for('add_client') }}">
-        <!-- Champ pour le type de client (pc, iot, ville) -->
+    <form method="POST" action="#" id="addClientForm">
         <label for="client_type">Client Type:</label>
         <select id="client_type" name="client_type" required>
             <option value="pc">PC</option>
@@ -18,14 +173,9 @@
             <option value="ville">Ville</option>
         </select><br>
 
-        <!-- Champs communs à tous les types de clients -->
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required><br>
 
-        <!-- Ajoutez d'autres champs communs ici -->
-
-        <!-- Champs spécifiques au type de client -->
-        <!-- Exemple pour un PC -->
         <div id="pc_fields" style="display: none;">
             <label for="ip_address">IP Address:</label>
             <input type="text" id="ip_address" name="ip_address"><br>
@@ -34,41 +184,158 @@
             <input type="text" id="mac_address" name="mac_address"><br>
         </div>
 
-        <!-- Exemple pour un IoT -->
         <div id="iot_fields" style="display: none;">
             <label for="mqtt_topic">MQTT Topic:</label>
             <input type="text" id="mqtt_topic" name="mqtt_topic"><br>
-
-            <!-- Ajoutez d'autres champs spécifiques à l'IoT ici -->
         </div>
 
-        <!-- Exemple pour une Ville -->
         <div id="ville_fields" style="display: none;">
             <label for="longitude">Longitude:</label>
             <input type="text" id="longitude" name="longitude"><br>
 
             <label for="latitude">Latitude:</label>
             <input type="text" id="latitude" name="latitude"><br>
-
-            <!-- Ajoutez d'autres champs spécifiques à la Ville ici -->
         </div>
 
-        <!-- Bouton de soumission -->
-        <button type="submit">Add Client</button>
+        <button type="button" onclick="addClient()">Add Client</button>
     </form>
 
     <!-- Ajoutez ici du code JavaScript pour afficher/masquer les champs spécifiques en fonction du type de client -->
-    <script>
-        document.getElementById('client_type').addEventListener('change', function() {
-            // Masquer tous les champs spécifiques
-            document.getElementById('pc_fields').style.display = 'none';
-            document.getElementById('iot_fields').style.display = 'none';
-            document.getElementById('ville_fields').style.display = 'none';
+<script>
+    
+    document.getElementById('client_type').addEventListener('change', function () {
+        // Masquer tous les champs spécifiques
+        document.getElementById('pc_fields').style.display = 'none';
+        document.getElementById('iot_fields').style.display = 'none';
+        document.getElementById('ville_fields').style.display = 'none';
 
-            // Afficher les champs spécifiques au type sélectionné
-            var clientType = this.value;
-            document.getElementById(clientType + '_fields').style.display = 'block';
+        // Afficher les champs spécifiques au type sélectionné
+        var clientType = this.value;
+        document.getElementById(clientType + '_fields').style.display = 'block';
+    });
+
+    // Fonction pour ajouter un client à la liste
+   // Fonction pour ajouter un client à la liste
+function addClient() {
+    var clientType = document.getElementById('client_type').value;
+    var name = document.getElementById('name').value;
+    var specificFields = {};
+
+    switch (clientType) {
+        case 'pc':
+            specificFields.ip_address = document.getElementById('ip_address').value;
+            specificFields.mac_address = document.getElementById('mac_address').value;
+            break;
+        case 'iot':
+            specificFields.mqtt_topic = document.getElementById('mqtt_topic').value;
+            break;
+        case 'ville':
+            specificFields.longitude = document.getElementById('longitude').value;
+            specificFields.latitude = document.getElementById('latitude').value;
+            break;
+        default:
+            console.log('Type de client non reconnu.');
+            return;
+    }
+
+    // Créer un objet client
+    var client = {
+        clientType: clientType,
+        name: name,
+        specificFields: specificFields
+    };
+
+    // Ajouter le client à la liste
+    clients.push(client);
+
+    // Afficher la liste des clients
+    displayClients();
+
+    // Afficher un message personnalisé
+    var message = `Le client "${name}" (${clientType}) a été ajouté avec succès!`;
+    showMessage(message, function() {
+        // Rediriger vers la page client_list.html après avoir cliqué sur OK
+       
+    });
+}
+ // Fonction pour filtrer et afficher les clients en fonction du type
+ function filterClients(clientType) {
+    // Filtrer les clients en fonction du type
+    var filteredClients = clients.filter(function(client) {
+        return client.clientType === clientType;
+    });
+
+    // Afficher la liste filtrée des clients
+    displayFilteredClients(filteredClients);
+}
+
+// Fonction pour afficher la liste filtrée des clients
+function displayFilteredClients(filteredClients) {
+    var clientListDisplay = document.getElementById('clientListDisplay');
+    clientListDisplay.innerHTML = '<h2>Filtered Client List</h2>';
+
+    if (filteredClients.length === 0) {
+        clientListDisplay.innerHTML += '<p>Aucun client trouvé.</p>';
+    } else {
+        filteredClients.forEach(function(client) {
+            clientListDisplay.innerHTML += `
+                <p>Type de client: ${client.clientType}</p>
+                <p>Nom: ${client.name}</p>
+                <p>${getSpecificFieldsText(client)}</p>
+                <hr>
+            `;
         });
-    </script>
+    }
+}
+
+// Fonction pour afficher un message personnalisé
+function showMessage(message, callback) {
+    console.log('Affichage du message :', message);
+    var confirmation = confirm(message);
+    console.log('Confirmation :', confirmation);
+    if (confirmation && typeof callback === 'function') {
+        console.log('Exécution du rappel');
+        callback();
+    }
+}
+
+
+    // Fonction pour afficher la liste des clients
+    function displayClients() {
+        var clientListDisplay = document.getElementById('clientListDisplay');
+        clientListDisplay.innerHTML = '<h2>Client List</h2>';
+
+        clients.forEach(function(client) {
+            clientListDisplay.innerHTML += `
+                <p>Type de client: ${client.clientType}</p>
+                <p>Nom: ${client.name}</p>
+                <p>${getSpecificFieldsText(client)}</p>
+                <hr>
+            `;
+        });
+    }
+
+    // Fonction pour obtenir le texte des champs spécifiques
+    function getSpecificFieldsText(client) {
+        switch (client.clientType) {
+            case 'pc':
+                return `IP Address: ${client.specificFields.ip_address}, MAC Address: ${client.specificFields.mac_address}`;
+            case 'iot':
+                return `MQTT Topic: ${client.specificFields.mqtt_topic}`;
+            case 'ville':
+                return `Longitude: ${client.specificFields.longitude}, Latitude: ${client.specificFields.latitude}`;
+            default:
+                return 'Champs spécifiques non disponibles.';
+        }
+    }
+
+    // Initialiser la liste des clients
+    var clients = [];
+    
+</script>
+<!-- Conteneur pour afficher la liste des clients -->
+<div id="clientListDisplay" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+
 </body>
 </html>

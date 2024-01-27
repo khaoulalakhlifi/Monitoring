@@ -1,15 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for
-from flask_mongoengine import MongoEngine
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['MONGODB_SETTINGS'] = {
-    'db': 'your_actual_database_name',
-    'host': 'mongodb://username:password@your_mongodb_host:27017/your_actual_database_name',
-}
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///your_database_name.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = MongoEngine(app)
+db = SQLAlchemy(app)
 
-# Define your Client model here in the same file
+
+
+@app.route('/')
+def index():
+    clients = Client.query.all()
+    return render_template('client_list.html', clients=clients)
+
+# Modifiez votre modèle Client dans app.py
 class Client(db.Document):
     # Fields of the Client model
     client_type = db.StringField(max_length=50, required=True)
@@ -19,11 +24,7 @@ class Client(db.Document):
     mqtt_topic = db.StringField(max_length=100)
     longitude = db.FloatField()
     latitude = db.FloatField()
-
-@app.route('/')
-def index():
-    clients = Client.objects()
-    return render_template('client_list.html', clients=clients)
+    temperature = db.FloatField()  # Ajoutez ce champ
 
 
 @app.route('/add_client', methods=['GET', 'POST'])
@@ -46,11 +47,16 @@ def add_client():
             longitude=longitude,
             latitude=latitude
         )
-        new_client.save()
+        db.session.add(new_client)
+        db.session.commit()
 
         return redirect(url_for('index'))
 
     return render_template('add_client.html')
 
+
+
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
