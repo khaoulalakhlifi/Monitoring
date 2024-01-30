@@ -1,0 +1,162 @@
+<!-- iotSection.html -->
+
+<head>
+    <!-- ... (other head tags) ... -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Add this CSS code to your HTML file or in a separate CSS file */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        select,
+        button {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        #mqttData,
+        #httpData {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        h2 {
+            color: #336699;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        canvas {
+            display: block;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+
+        /* Optional: Add some styling to loading spans */
+        span#mqttTemperature,
+        span#mqttHumidity,
+        span#httpTemperature,
+        span#httpHumidity {
+            color: #999;
+        }
+
+        /* Optional: Customize loading spinner or animation if desired */
+    </style>
+</head>
+
+<body>
+    <h1>IoT Section</h1>
+
+    <form id="dataForm">
+        <label for="data_type">Select Data Type:</label>
+        <select name="data_type" id="data_type">
+            <option value="temperature">Temperature</option>
+            <option value="humidity">Humidity</option>
+            <option value="both">Both</option>
+        </select>
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+
+    <div id="mqttData">
+        <h2>MQTT Data</h2>
+        <p>Temperature: <span id="mqttTemperature">Loading...</span></p>
+        <p>Humidity: <span id="mqttHumidity">Loading...</span></p>
+        <canvas id="mqttChart" width="400" height="200"></canvas>
+    </div>
+
+    <div id="httpData">
+        <h2>HTTP Data</h2>
+        <p>Temperature: <span id="httpTemperature">Loading...</span></p>
+        <p>Humidity: <span id="httpHumidity">Loading...</span></p>
+        <canvas id="httpChart" width="400" height="200"></canvas>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        function submitForm() {
+            // Use AJAX to submit the form
+            $.ajax({
+                type: 'POST',
+                
+                data: $('#dataForm').serialize(),
+                success: function (data) {
+                    // Get the selected data type
+                    var selectedDataType = $('#data_type').val();
+
+                    // Update the data in your HTML page based on the selected data type
+                    if (selectedDataType === 'temperature') {
+                        $('#mqttTemperature').text(data.mqttTemperature);
+                        $('#httpTemperature').text(data.httpTemperature);
+                        updateChart('mqttChart', 'MQTT Data', data.mqttTemperature, 0);
+                        updateChart('httpChart', 'HTTP Data', data.httpTemperature, 0);
+                    } else if (selectedDataType === 'humidity') {
+                        $('#mqttHumidity').text(data.mqttHumidity);
+                        $('#httpHumidity').text(data.httpHumidity);
+                        updateChart('mqttChart', 'MQTT Data', 0, data.mqttHumidity);
+                        updateChart('httpChart', 'HTTP Data', 0, data.httpHumidity);
+                    } else if (selectedDataType === 'both') {
+                        $('#mqttTemperature').text(data.mqttTemperature);
+                        $('#mqttHumidity').text(data.mqttHumidity);
+                        $('#httpTemperature').text(data.httpTemperature);
+                        $('#httpHumidity').text(data.httpHumidity);
+                        updateChart('mqttChart', 'MQTT Data', data.mqttTemperature, data.mqttHumidity);
+                        updateChart('httpChart', 'HTTP Data', data.httpTemperature, data.httpHumidity);
+                    }
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        function updateChart(chartId, title, temperature, humidity) {
+            var ctx = document.getElementById(chartId).getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Temperature', 'Humidity'],
+                    datasets: [{
+                        label: title,
+                        data: [temperature, humidity],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

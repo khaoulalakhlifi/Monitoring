@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In</title>
+    <style>
+        /* Ajoutez ici vos styles CSS */
+        body {
+            background-image: url('comment-prevoir-meteo-scaled.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        
+
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Sign In</h2>
+        <form id="signinForm" onsubmit="signin(); return false;">
+            <div class="form-group">
+                <label for="signinUsername">Username:</label>
+                <input type="text" id="signinUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="signinPassword">Password:</label>
+                <input type="password" id="signinPassword" required>
+            </div>
+            <button type="submit">Sign In</button>
+        </form>
+        
+            <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+        </div>
+    
+        <script>
+            function signin() {
+                var username = document.getElementById("signinUsername").value;
+                var password = document.getElementById("signinPassword").value;
+    
+                // Retrieve user data from storage (replace this with backend logic)
+                var storedUser = localStorage.getItem('user');
+                if (!storedUser) {
+                    alert("No account found. Please sign up first.");
+                    return;
+                }
+    
+                var user = JSON.parse(storedUser);
+    
+                // Check if the provided credentials match the stored user
+                if (user.username === username && user.password === password) {
+                    alert("Sign in successful!");
+                    window.location.href = "add_client.html";  // Redirect to the desired page after sign in
+                } else {
+                    alert("Incorrect username or password. Please try again.");
+                }
+            }
+        </script>
+    </body>
+    </html>
+    

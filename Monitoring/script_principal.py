@@ -2,7 +2,7 @@ from flask import Flask, render_template
 import openmeteo_requests
 from openmeteo_sdk.Variable import Variable
 from geopy.geocoders import Nominatim
-from prediction_module import train_model, make_prediction
+from app.admin.prediction_module import train_model, make_prediction
 import requests_cache
 import pandas as pd
 from retry_requests import retry
@@ -12,6 +12,14 @@ import base64
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
+from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
+import threading
+import random
+import time
+import requests
+import json
+from app.admin.prediction_module import train_model, make_prediction 
 
 
 # Fonction pour obtenir les coordonnées géographiques à partir du nom de la ville

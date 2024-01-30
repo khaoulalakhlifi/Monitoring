@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ville Map</title>
+    <!-- Ajoutez ces liens pour Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #87CEEB; /* Utiliser une couleur de fond bleue pour le ciel */
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #fff;
+            text-align: center;
+        }
+        #ville_fields {
+            background-color: #3498db; /* Couleur de fond bleue */
+            padding: 20px;
+            border-radius: 12px; /* Coins arrondis plus prononcés */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Ombre légère */
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #fff; /* Couleur du texte blanc */
+        }
+        
+        #ville_fields label {
+            margin-bottom: 8px;
+        }
+        
+        #ville_fields input {
+            padding: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #2980b9; /* Bordure bleue plus foncée */
+            border-radius: 4px;
+            color: #333; /* Couleur du texte plus sombre */
+        }
+        
+        #ville_fields button {
+            background-color: #2ecc71; /* Couleur de fond verte */
+            color: #fff; /* Couleur du texte blanc */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease; /* Transition en douceur */
+        }
+        
+        #ville_fields button:hover {
+            background-color: #27ae60; /* Couleur de fond verte plus foncée au survol */
+        }
+        
+        
+        #map {
+            height: 400px;
+            width: 80%;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        canvas {
+            margin-top: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        
+    </style>
+</head>
+
+<body>
+    <!-- Formulaire pour entrer les informations de la ville -->
+    <div id="ville_fields">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="longitude">Longitude:</label>
+        <input type="text" id="longitude" name="longitude"><br>
+
+        <label for="latitude">Latitude:</label>
+        <input type="text" id="latitude" name="latitude"><br>
+
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date"><br>
+
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date"><br>
+
+        <button onclick="showCityOnMap()">OK</button>
+        
+    </div>
+    <div>
+        <canvas id="weatherChart" width="500" height="400"></canvas>
+    </div>
+
+    <!-- Conteneur pour la carte -->
+    <div id="map"></div>
+    <script>
+        function showCityOnMap() {
+            var name = document.getElementById('name').value;
+            var longitude = parseFloat(document.getElementById('longitude').value) || 0;
+            var latitude = parseFloat(document.getElementById('latitude').value) || 0;
+
+            // Code JavaScript pour initialiser la carte avec un marqueur
+            var map = L.map('map').setView([latitude, longitude], 13);
+
+            // Ajoutez une couche de carte à partir de Leaflet
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Ajoutez un marqueur rouge à la position de la ville
+            var marker = L.marker([latitude, longitude], { title: name }).addTo(map)
+                .bindPopup(name)
+                .openPopup();
+
+            // Ajoutez un gestionnaire d'événements de clic au marqueur une seule fois
+            marker.on('click', function () {
+                getWeather(name, longitude, latitude);
+            });
+        }
+
+        function updateChartWithData(weatherData) {
+            // Extraire les données météorologiques
+            var temperatureData = weatherData.hourlyData.temperature;
+            var humidityData = weatherData.hourlyData.humidity;
+            var precipitationProbabilityData = weatherData.hourlyData.precipitationProbability;
+
+            // Remplir les tableaux avec les données
+            var updatedTemperatureData = temperatureData.map((temp, i) => ({
+                x: `${weatherData.date} ${i}:00`,
+                y: temp
+            }));
+            var updatedHumidityData = humidityData.map((humidity, i) => ({
+                x: `${weatherData.date} ${i}:00`,
+                y: humidity
+            }));
+            var updatedPrecipitationProbabilityData = precipitationProbabilityData.map((precipitation, i) => ({
+                x: `${weatherData.date} ${i}:00`,
+                y: precipitation
+            }));
+
+            // Mettre à jour les données du graphique
+            lineChart.data.datasets[0].data = updatedTemperatureData;
+            lineChart.data.datasets[1].data = updatedHumidityData;
+            lineChart.data.datasets[2].data = updatedPrecipitationProbabilityData;
+
+            // Mettre à jour le graphique
+            lineChart.update();
+        }
+
+
+        function getWeather(name, longitude, latitude) {
+            var startDate = document.getElementById('start_date').value;
+            var endDate = document.getElementById('end_date').value;
+
+            // Vérifier si les dates sont sélectionnées
+            if (!startDate || !endDate) {
+                alert("Veuillez sélectionner une date de début et une date de fin.");
+                return;
+            }
+
+            // Convertir les dates en objets Date
+            var startDateObj = new Date(startDate);
+            var endDateObj = new Date(endDate);
+
+            // Initialiser un tableau pour stocker toutes les données météorologiques
+            var allWeatherData = [];
+
+            // Fonction pour effectuer une requête à l'API et retourner une promesse
+            function fetchWeatherData(date) {
+                var formattedDate = date.toISOString().split('T')[0]; // Format de date pour l'API
+                var apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,precipitation_probability&start_date=${formattedDate}&end_date=${formattedDate}`;
+
+                return fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => ({
+                        date: formattedDate,
+                        hourlyData: {
+                            temperature: data.hourly.temperature_2m,
+                            humidity: data.hourly.relative_humidity_2m,
+                            precipitationProbability: data.hourly.precipitation_probability
+                        }
+                    }))
+                    .catch(error => console.error('Erreur lors de la récupération des données météorologiques:', error));
+            }
+
+            // Initialiser un tableau pour stocker toutes les promesses
+            var promises = [];
+
+            // Boucle à travers toutes les dates entre startDate et endDate
+            var currentDate = new Date(startDateObj);
+            while (currentDate <= endDateObj) {
+                promises.push(fetchWeatherData(currentDate));
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            Promise.all(promises)
+                .then(dataArray => {
+                    // Toutes les données météorologiques sont maintenant dans dataArray
+                    console.log(dataArray);
+
+                    // Créer un tableau pour stocker toutes les heures de la journée
+                    var hoursOfDay = Array.from({ length: 24 }, (_, i) => i);
+
+                    // Créer des tableaux pour stocker les données de température, humidité et probabilité de précipitation
+                    var temperatureData = [];
+                    var humidityData = [];
+                    var precipitationProbabilityData = [];
+                    // Créer un tableau pour stocker les dates au lieu des heures
+                    var dateLabels = Array.from({ length: dataArray.length }, (_, i) => dataArray[i].date);
+
+                    // Remplir les tableaux avec les données
+                    dataArray.forEach(data => {
+                        hoursOfDay.forEach((hour, i) => {
+                            temperatureData.push({
+                                x: `${data.date} ${hour}:00`, // Utiliser la date et l'heure
+                                y: data.hourlyData.temperature[i]
+                            });
+                            humidityData.push({
+                                x: `${data.date} ${hour}:00`,
+                                y: data.hourlyData.humidity[i]
+                            });
+                            precipitationProbabilityData.push({
+                                x: `${data.date} ${hour}:00`,
+                                y: data.hourlyData.precipitationProbability[i]
+                            });
+                        });
+                    });
+
+                    // Configurer les données pour le graphique
+                    var chartData = {
+                        datasets: [
+                            {
+                                label: 'Temperature (°C)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                data: temperatureData
+                            },
+                            {
+                                label: 'Humidity (%)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                data: humidityData
+                            },
+                            {
+                                label: 'Precipitation Probability (%)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                data: precipitationProbabilityData
+                            }
+                        ]
+                    };
+
+                    // Configurer les options du graphique
+                    var chartOptions = {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Hour of Day'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Value'
+                                }
+                            }
+                        }
+                    };
+
+                    // Obtenir le contexte du canevas
+                    var ctx = document.getElementById('weatherChart').getContext('2d');
+
+                    // Créer le graphique linéaire
+                    var lineChart = new Chart(ctx, {
+                        type: 'line',
+                        data: chartData,
+                        options: chartOptions
+                    });
+                })
+                .catch(error => console.error('Erreur lors de la résolution des promesses:', error));
+        }
+    </script>
+</body>
+
+</html>

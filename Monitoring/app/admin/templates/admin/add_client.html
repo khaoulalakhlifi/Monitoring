@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+   
+    <!-- Lien vers la bibliothèque Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" integrity="sha512-gn5384FRuVVH7dDZiKUR8DH9nmzcaCOyxlDyG/J7tK6JjMzY+jzJZ5uKtR0ZlE8m2krrPef3Nt6boqLdZbMP1g==" crossorigin=""/>
+    <script async src="https://unpkg.com/leaflet/dist/leaflet.js" integrity="sha512-I1r7L3Wix4qa9jNLzS5e56tGvbA7WUj/2qBrwLpuozd6Fw7xSTZr9hWGBOeqfAKmbY87Ez+XOcG2boeCyPkRGg==" crossorigin=""></script>
+
     <title>Add Client</title>
     <style>
         body {
@@ -81,89 +86,39 @@
     </style>
 </head>
 <body>
+    <!-- Ajoutez ceci où vous souhaitez afficher la carte -->
+
+
     <h1>Add Client</h1>
     <button onclick="filterClients('pc')">PC Clients</button>
     <button onclick="filterClients('iot')">IoT Clients</button>
     <button onclick="filterClients('ville')">Ville Clients</button>
-    <button onclick="fetchSystemInfo()">Static</button>
-    <h1>System Information</h1>
-    <p id="memoryUsage">Memory Usage: </p>
-    <p id="cpuUsage">CPU Usage: </p>
-    <p id="diskUsage">Disk Usage: </p>
-    <canvas id="systemChart" width="400" height="200"></canvas>
-
+    <button onclick="redirectToStatic()">Pc Devices</button>
 
     <script>
-        async function fetchSystemInfo() {
-            try {
-                const response = await fetch('systemInfo.json');
-                if (!response.ok) {
-                    throw new Error(`Erreur lors de la récupération des données : ${response.status} ${response.statusText}`);
-                }
-                const data = await response.json();
-                createChart(data);
-            } catch (error) {
-                console.error('Erreur lors de la récupération des données système:', error);
-            }
+        function redirectToStatic() {
+            window.location.href = 'static.html';
         }
-        
-        
-        
-        async function fetchAndRefreshSystemInfo() {
-            try {
-                const response = await fetch('Get-SystemInfo.ps1');
-                const data = await response.json();
-                createChart(data);
-                setTimeout(fetchAndRefreshSystemInfo, 60000);  // Rafraîchir toutes les 60 secondes
-            } catch (error) {
-                console.error('Erreur lors de la récupération des données système:', error);
-            }
+    </script>
+    
+    <button onclick="redirectToIoT()">IoT dsh</button>
+    <script>
+        function redirectToIoT() {
+            // Redirect to the IoT Dashboard page (iotSection.html)
+            window.location.href = 'iotSection.html';
         }
-        
-        // Appelez cette fonction pour démarrer le processus de rafraîchissement
-        fetchAndRefreshSystemInfo();
-        
-        
-        function createChart(data) {
-            // Mettez à jour le graphique avec les nouvelles données
-            const ctx = document.getElementById('systemChart').getContext('2d');
-            const myChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Memory Usage', 'CPU Usage', 'Disk Usage'],
-                    datasets: [{
-                        label: 'System Info',
-                        data: [data.MemoryUsagePercent, data.CpuUsagePercent, data.DiskUsagePercent],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
-        
-            // Affichez les données dans la page HTML
-            document.getElementById('memoryUsage').innerText = `Memory Usage: ${data.MemoryUsagePercent}%`;
-            document.getElementById('cpuUsage').innerText = `CPU Usage: ${data.CpuUsagePercent}%`;
-            document.getElementById('diskUsage').innerText = `Disk Usage: ${data.DiskUsagePercent}%`;
+    </script>
+    <button onclick="redirectToville()">ville MAP</button>
+     
+    <script>
+        function redirectToville() {
+            // Redirect to the IoT Dashboard page (iotSection.html)
+            window.location.href = 'ville.html';
         }
-        
-           
-    </script>        
+    </script>
+    
+
+    
     
     <form method="POST" action="#" id="addClientForm">
         <label for="client_type">Client Type:</label>
@@ -180,28 +135,86 @@
             <label for="ip_address">IP Address:</label>
             <input type="text" id="ip_address" name="ip_address"><br>
 
-            <label for="mac_address">MAC Address:</label>
-            <input type="text" id="mac_address" name="mac_address"><br>
-        </div>
-
-        <div id="iot_fields" style="display: none;">
-            <label for="mqtt_topic">MQTT Topic:</label>
-            <input type="text" id="mqtt_topic" name="mqtt_topic"><br>
-        </div>
-
-        <div id="ville_fields" style="display: none;">
+        
             <label for="longitude">Longitude:</label>
             <input type="text" id="longitude" name="longitude"><br>
-
+        
             <label for="latitude">Latitude:</label>
             <input type="text" id="latitude" name="latitude"><br>
         </div>
 
+        <div id="iot_fields" style="display: none;">
+            <!-- Existing content for MQTT Topic -->
+           
+        
+            <!-- Add radio buttons for data type selection -->
+        <!-- Replace the radio buttons with a dropdown menu -->
+        <label for="mqtt_topic">MQTT Topic:</label>
+        <input type="text" id="mqtt_topic" name="mqtt_topic"><br>
+
+                
+            <!-- Other fields -->
+            <label for="ip_address">IP Address:</label>
+            <input type="text" id="ip_address" name="ip_address"><br>
+        
+            <label for="longitude">Longitude:</label>
+            <input type="text" id="longitude" name="longitude"><br>
+        
+            <label for="latitude">Latitude:</label>
+            <input type="text" id="latitude" name="latitude"><br>
+        </div>
+        
+
+        <div id="ville_fields" style="display: none;">
+            <label for="ip_address">IP Address:</label>
+            <input type="text" id="ip_address" name="ip_address"><br>
+
+            
+            <label for="longitude">Longitude:</label>
+            <input type="text" id="longitude" name="longitude"><br>
+        
+            <label for="latitude">Latitude:</label>
+            <input type="text" id="latitude" name="latitude"><br>
+        </div>
+        
+
         <button type="button" onclick="addClient()">Add Client</button>
     </form>
+ <!-- Conteneur pour afficher la liste des clients -->
+<div id="clientListDisplay" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+
+    <script>
+        // Initialiser la carte Leaflet
+        var map = L.map('map').setView([0, 0], 2); // Centrez la carte avec un zoom de 2
+        
+        // Ajouter une couche de tuiles OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Fonction pour ajouter des marqueurs pour chaque client sur la carte
+        function addMarkers() {
+            clients.forEach(function(client) {
+                var marker = L.marker([client.specificFields.latitude, client.specificFields.longitude])
+                    .addTo(map)
+                    .bindPopup(`Client: ${client.name}<br>Latitude: ${client.specificFields.latitude}<br>Longitude: ${client.specificFields.longitude}`);
+            });
+        }
+        
+        // Appeler la fonction pour ajouter les marqueurs lors de l'initialisation
+        addMarkers();
+        </script>
+        
+
 
     <!-- Ajoutez ici du code JavaScript pour afficher/masquer les champs spécifiques en fonction du type de client -->
 <script>
+      // Fonction pour afficher la position du client
+      function displayPosition(client) {
+        var message = `Position du client "${client.name}" (${client.clientType}): Latitude ${client.specificFields.latitude}, Longitude ${client.specificFields.longitude}`;
+        alert(message);
+    }
     
     document.getElementById('client_type').addEventListener('change', function () {
         // Masquer tous les champs spécifiques
@@ -216,48 +229,149 @@
 
     // Fonction pour ajouter un client à la liste
    // Fonction pour ajouter un client à la liste
-function addClient() {
+   function addClient() {
     var clientType = document.getElementById('client_type').value;
     var name = document.getElementById('name').value;
     var specificFields = {};
+     // Get the selected MQTT Topic
+        // Add an event listener to the MQTT topic dropdown
+document.getElementById('mqtt_topic').addEventListener('change', function () {
+    // Get the selected MQTT Topic
+    var selectedMqttTopic = this.value;
+
+    // Store the selected MQTT Topic in local storage
+    localStorage.setItem('selectedMqttTopic', selectedMqttTopic);
+});
+
 
     switch (clientType) {
         case 'pc':
             specificFields.ip_address = document.getElementById('ip_address').value;
-            specificFields.mac_address = document.getElementById('mac_address').value;
-            break;
-        case 'iot':
-            specificFields.mqtt_topic = document.getElementById('mqtt_topic').value;
-            break;
-        case 'ville':
+            
             specificFields.longitude = document.getElementById('longitude').value;
             specificFields.latitude = document.getElementById('latitude').value;
             break;
+        case 'iot':
+            specificFields.mqtt_topic = document.getElementById('mqtt_topic').value;
+            specificFields.ip_address = document.getElementById('ip_address').value;
+            specificFields.longitude = document.getElementById('longitude').value;
+            specificFields.latitude = document.getElementById('latitude').value;
+            break;
+        case 'ville':
+            specificFields.ville = document.getElementById('ville').value;
+            specificFields.longitude = document.getElementById('longitude').value;
+            specificFields.latitude = document.getElementById('latitude').value;
+            specificFields.ip_address = document.getElementById('ip_address').value;
+            redirectToVillePage(specificFields.ville, specificFields.longitude, specificFields.latitude);
+            return; // Terminer la fonction après la redirection
         default:
             console.log('Type de client non reconnu.');
             return;
     }
-
+    
     // Créer un objet client
     var client = {
         clientType: clientType,
         name: name,
         specificFields: specificFields
     };
+   // Ajouter le client à la liste
+   clients.push(client);
 
-    // Ajouter le client à la liste
-    clients.push(client);
+   // Afficher la liste des clients
+   displayClients();
 
-    // Afficher la liste des clients
-    displayClients();
+   // Afficher un message personnalisé
+   var message = `Le client "${name}" (${clientType}) a été ajouté avec succès!`;
+   showMessage(message, function () {
+       // Afficher la position après avoir ajouté le client
+       displayPosition(client);
 
-    // Afficher un message personnalisé
-    var message = `Le client "${name}" (${clientType}) a été ajouté avec succès!`;
-    showMessage(message, function() {
-        // Rediriger vers la page client_list.html après avoir cliqué sur OK
-       
-    });
+       // Ajouter le marqueur du nouveau client sur la carte
+       addMarkers();
+   });
 }
+
+// Fonction pour afficher la liste des clients
+function displayClients() {
+ var clientListDisplay = document.getElementById('clientListDisplay');
+ clientListDisplay.innerHTML = '';  // Clear previous content
+ var htmlContent = ['<h2>Client List</h2>'];
+
+ clients.forEach(function (client) {
+     htmlContent.push(`
+         <p>Type de client: ${client.clientType}</p>
+         <p>Nom: ${client.name}</p>
+         <p>${getSpecificFieldsText(client)}</p>
+         <button onclick="updateClient('${client.name}', '${client.clientType}')">Update</button>
+         <button onclick="deleteClient('${client.name}', '${client.clientType}')">Delete</button>
+         <button onclick="displayPosition(${JSON.stringify(client)})">Display Position</button>
+         <hr>
+     `);
+ });
+
+ clientListDisplay.innerHTML = htmlContent.join('');
+}
+function updateClient(name, clientType) {
+    // Trouver le client dans la liste
+    var clientToUpdate = clients.find(function(client) {
+        return client.name === name && client.clientType === clientType;
+    });
+
+    if (!clientToUpdate) {
+        console.log('Client non trouvé.');
+        return;
+    }
+
+    // Demander le nouveau nom
+    var newName = prompt('Nouveau nom:', clientToUpdate.name);
+
+    // Mettre à jour les champs spécifiques du client
+    switch (clientToUpdate.clientType) {
+        case 'pc':
+            clientToUpdate.specificFields.ip_address = prompt('Nouvelle adresse IP:', clientToUpdate.specificFields.ip_address);
+            clientToUpdate.specificFields.longitude = prompt('Nouvelle longitude:', clientToUpdate.specificFields.longitude);
+            clientToUpdate.specificFields.latitude = prompt('Nouvelle latitude:', clientToUpdate.specificFields.latitude);
+            break;
+        case 'iot':
+            clientToUpdate.specificFields.mqtt_topic = prompt('Nouveau sujet MQTT:', clientToUpdate.specificFields.mqtt_topic);
+            clientToUpdate.specificFields.ip_address = prompt('Nouvelle adresse IP:', clientToUpdate.specificFields.ip_address);
+            
+            clientToUpdate.specificFields.longitude = prompt('Nouvelle longitude:', clientToUpdate.specificFields.longitude);
+            clientToUpdate.specificFields.latitude = prompt('Nouvelle latitude:', clientToUpdate.specificFields.latitude);
+            break;
+        case 'ville':
+            clientToUpdate.specificFields.longitude = prompt('Nouvelle longitude:', clientToUpdate.specificFields.longitude);
+            clientToUpdate.specificFields.latitude = prompt('Nouvelle latitude:', clientToUpdate.specificFields.latitude);
+            clientToUpdate.specificFields.ip_address = prompt('Nouvelle adresse IP:', clientToUpdate.specificFields.ip_address);
+          
+            break;
+        default:
+            console.log('Type de client non reconnu.');
+            return;
+    }
+
+    // Mettre à jour le nom
+    clientToUpdate.name = newName;
+
+    // Afficher la liste mise à jour
+    displayClients();
+}
+
+
+// Fonction pour supprimer les données d'un client
+function deleteClient(name, clientType) {
+    // Filtrer les clients pour exclure le client à supprimer
+    clients = clients.filter(function(client) {
+        return !(client.name === name && client.clientType === clientType);
+    });
+
+    // Afficher la liste mise à jour
+    displayClients();
+}
+
+
+
  // Fonction pour filtrer et afficher les clients en fonction du type
  function filterClients(clientType) {
     // Filtrer les clients en fonction du type
@@ -301,29 +415,37 @@ function showMessage(message, callback) {
 
 
     // Fonction pour afficher la liste des clients
-    function displayClients() {
-        var clientListDisplay = document.getElementById('clientListDisplay');
-        clientListDisplay.innerHTML = '<h2>Client List</h2>';
+   // Fonction pour afficher la liste des clients
+   function displayClients() {
+    var clientListDisplay = document.getElementById('clientListDisplay');
+    clientListDisplay.innerHTML = '';  // Clear previous content
+    var htmlContent = ['<h2>Client List</h2>'];
 
-        clients.forEach(function(client) {
-            clientListDisplay.innerHTML += `
-                <p>Type de client: ${client.clientType}</p>
-                <p>Nom: ${client.name}</p>
-                <p>${getSpecificFieldsText(client)}</p>
-                <hr>
-            `;
-        });
-    }
+    clients.forEach(function(client) {
+        htmlContent.push(`
+            <p>Type de client: ${client.clientType}</p>
+            <p>Nom: ${client.name}</p>
+            <p>${getSpecificFieldsText(client)}</p>
+            <button onclick="updateClient('${client.name}', '${client.clientType}')">Update</button>
+            <button onclick="deleteClient('${client.name}', '${client.clientType}')">Delete</button>
+            <hr>
+        `);
+    });
+
+    clientListDisplay.innerHTML = htmlContent.join('');
+}
+
+
 
     // Fonction pour obtenir le texte des champs spécifiques
     function getSpecificFieldsText(client) {
         switch (client.clientType) {
             case 'pc':
-                return `IP Address: ${client.specificFields.ip_address}, MAC Address: ${client.specificFields.mac_address}`;
+                return `IP Address: ${client.specificFields.ip_address}, Longitude: ${client.specificFields.longitude}, Latitude: ${client.specificFields.latitude}`;
             case 'iot':
-                return `MQTT Topic: ${client.specificFields.mqtt_topic}`;
+                return `MQTT Topic: ${client.specificFields.mqtt_topic},IP Address: ${client.specificFields.ip_address}, Longitude: ${client.specificFields.longitude}, Latitude: ${client.specificFields.latitude}`;
             case 'ville':
-                return `Longitude: ${client.specificFields.longitude}, Latitude: ${client.specificFields.latitude}`;
+                return `IP Address: ${client.specificFields.ip_address},Longitude: ${client.specificFields.longitude}, Latitude: ${client.specificFields.latitude}`;
             default:
                 return 'Champs spécifiques non disponibles.';
         }
@@ -332,9 +454,13 @@ function showMessage(message, callback) {
     // Initialiser la liste des clients
     var clients = [];
     
+
 </script>
 <!-- Conteneur pour afficher la liste des clients -->
 <div id="clientListDisplay" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+<!-- Conteneur pour la carte Leaflet -->
+<div id="map" style="height: 400px;"></div>
+
 
 
 </body>
