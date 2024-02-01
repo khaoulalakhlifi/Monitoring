@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <style>
         body {
@@ -81,6 +82,7 @@
 </head>
 
 <body>
+    
     <!-- Formulaire pour entrer les informations de la ville -->
     <div id="ville_fields">
         <label for="name">Name:</label>
@@ -91,6 +93,9 @@
 
         <label for="latitude">Latitude:</label>
         <input type="text" id="latitude" name="latitude"><br>
+        <label for="ip_address">IP Address:</label>
+        <input type="text" id="ip_address" name="ip_address"><br>
+
 
         <label for="start_date">Start Date:</label>
         <input type="date" id="start_date" name="start_date"><br>
@@ -99,16 +104,53 @@
         <input type="date" id="end_date" name="end_date"><br>
 
         <button onclick="showCityOnMap()">OK</button>
+        <button onclick="loadResults()">Prediction</button>
         
     </div>
+    <div id="ville_info">
+        <!-- Existing code... -->
+    
+        <h2>Ville Information</h2>
+        <p><strong>Name:</strong> <span id="info_name"></span></p>
+        <p><strong>Latitude:</strong> <span id="info_latitude"></span></p>
+        <p><strong>Longitude:</strong> <span id="info_longitude"></span></p>
+        <p><strong>IP Address:</strong> <span id="info_ip_address"></span></p>
+        <button onclick="deleteCity()">Delete</button>
+        <button onclick="updateCity()">Update</button>
+        <button onclick="showCityOnMap()">OK</button>
+
+    </div>
+    
     <div>
         <canvas id="weatherChart" width="500" height="400"></canvas>
+    </div>
+    <div>
+        <canvas id="predictionChart" width="800" height="400"></canvas>
     </div>
 
     <!-- Conteneur pour la carte -->
     <div id="map"></div>
     <script>
+        var currentCityData = null;
         function showCityOnMap() {
+            var name = document.getElementById('name').value;
+        var longitude = parseFloat(document.getElementById('longitude').value) || 0;
+        var latitude = parseFloat(document.getElementById('latitude').value) || 0;
+        var ipAddress = document.getElementById('ip_address').value;
+
+        // Afficher les informations de la ville dans la section "ville_info"
+        document.getElementById('info_name').textContent = name;
+        document.getElementById('info_latitude').textContent = latitude;
+        document.getElementById('info_longitude').textContent = longitude;
+        document.getElementById('info_ip_address').textContent = ipAddress;
+         // Store the current city data
+    currentCityData = {
+        name: name,
+        latitude: latitude,
+        longitude: longitude,
+        ipAddress: ipAddress
+    };
+
             var name = document.getElementById('name').value;
             var longitude = parseFloat(document.getElementById('longitude').value) || 0;
             var latitude = parseFloat(document.getElementById('latitude').value) || 0;
@@ -132,34 +174,118 @@
             });
         }
 
+        function loadResults() {
+            $.getJSON('predictions.json', function (data) {
+                console.log(data);
+                updatePredictionChartWithData(data);
+            });
+        }
+        function deleteCity() {
+            // Implement the logic to delete the city using currentCityData
+            // For example, you can clear the information in the "ville_info" div
+            clearCityInfo();
+        }
+        
+      // Define a global variable to store current city data
+      function updateCity(name, latitude, longitude, ipAddress) {
+        // Find the city in the list
+        var cityToUpdate = cities.find(function(city) {
+            return city.name === name && city.latitude === latitude && city.longitude === longitude && city.ipAddress === ipAddress;
+        });
+    
+        if (!cityToUpdate) {
+            console.log('City not found.');
+            return;
+        }
+    
+        // Ask for the new name
+        var newName = prompt('New name:', cityToUpdate.name);
+    
+        // Update specific fields of the city
+        cityToUpdate.latitude = parseFloat(prompt('New latitude:', cityToUpdate.latitude)) || 0;
+        cityToUpdate.longitude = parseFloat(prompt('New longitude:', cityToUpdate.longitude)) || 0;
+        cityToUpdate.ipAddress = prompt('New IP address:', cityToUpdate.ipAddress);
+    
+        // Update the name
+        cityToUpdate.name = newName;
+    
+        // Update the information in the "ville_info" div
+        document.getElementById('info_name').textContent = cityToUpdate.name;
+        document.getElementById('info_latitude').textContent = cityToUpdate.latitude;
+        document.getElementById('info_longitude').textContent = cityToUpdate.longitude;
+        document.getElementById('info_ip_address').textContent = cityToUpdate.ipAddress;
+    
+        // Update the map with the new city data
+        showCityOnMap();
+    }
+    
+    
+
+
+// Function to set the current city data
+function setCurrentCityData(name, latitude, longitude, ipAddress) {
+    currentCityData.name = name;
+    currentCityData.latitude = latitude;
+    currentCityData.longitude = longitude;
+    currentCityData.ipAddress = ipAddress;
+}
+
+        
+        function clearCityInfo() {
+            // Clear the information in the "ville_info" div
+            document.getElementById('info_name').textContent = '';
+            document.getElementById('info_latitude').textContent = '';
+            document.getElementById('info_longitude').textContent = '';
+            document.getElementById('info_ip_address').textContent = '';
+        }
+        
         function updateChartWithData(weatherData) {
-            // Extraire les données météorologiques
-            var temperatureData = weatherData.hourlyData.temperature;
-            var humidityData = weatherData.hourlyData.humidity;
-            var precipitationProbabilityData = weatherData.hourlyData.precipitationProbability;
-
-            // Remplir les tableaux avec les données
-            var updatedTemperatureData = temperatureData.map((temp, i) => ({
+            // Extraire les données météorologiques prédites
+            var temperaturePrediction = weatherData.temperature_prediction;
+            var humidityPrediction = weatherData.humidity_prediction;
+        
+            // Créer des tableaux pour stocker les données prédites
+            var temperaturePredictionData = Array.from({ length: 24 }, (_, i) => ({
                 x: `${weatherData.date} ${i}:00`,
-                y: temp
+                y: temperaturePrediction
             }));
-            var updatedHumidityData = humidityData.map((humidity, i) => ({
+            var humidityPredictionData = Array.from({ length: 24 }, (_, i) => ({
                 x: `${weatherData.date} ${i}:00`,
-                y: humidity
+                y: humidityPrediction
             }));
-            var updatedPrecipitationProbabilityData = precipitationProbabilityData.map((precipitation, i) => ({
-                x: `${weatherData.date} ${i}:00`,
-                y: precipitation
-            }));
-
+        
             // Mettre à jour les données du graphique
-            lineChart.data.datasets[0].data = updatedTemperatureData;
-            lineChart.data.datasets[1].data = updatedHumidityData;
-            lineChart.data.datasets[2].data = updatedPrecipitationProbabilityData;
-
+            lineChart.data.datasets[3].data = temperaturePredictionData;
+            lineChart.data.datasets[4].data = humidityPredictionData;
+        
             // Mettre à jour le graphique
             lineChart.update();
         }
+        function updatePredictionChartWithData(predictionData) {
+            var ctx = document.getElementById('predictionChart').getContext('2d');
+            var predictionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+                    datasets: [
+                        {
+                            label: 'Predicted Temperature (°C)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            data: Array.from({ length: 24 }, () => predictionData.temperature_prediction)
+                        },
+                        {
+                            label: 'Predicted Humidity (%)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            data: Array.from({ length: 24 }, () => predictionData.humidity_prediction)
+                        }
+                    ]
+                },
+                options: {
+                    // Vos options ici
+                }
+            });
+        }
+       
 
 
         function getWeather(name, longitude, latitude) {
@@ -206,6 +332,7 @@
                 promises.push(fetchWeatherData(currentDate));
                 currentDate.setDate(currentDate.getDate() + 1);
             }
+          
 
             Promise.all(promises)
                 .then(dataArray => {
